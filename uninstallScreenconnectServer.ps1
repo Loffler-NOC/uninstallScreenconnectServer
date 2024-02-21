@@ -1,8 +1,8 @@
 #Check if Screenconnect Server is installed
-$programName = "Screenconnect Server"
+$programName = "ScreenConnect"
 
 # Check if the program is installed
-$installed = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object { $_.DisplayName -eq $programName }
+$installed = Get-ItemProperty HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object { $_.DisplayName -eq $programName }
 
 if ($installed -ne $null) {
     Write-Output "$programName is installed. Continuing to uninstallation."
@@ -57,7 +57,7 @@ if ($installed -ne $null) {
     exit 1
 } else {
     # Check 32-bit registry if not found in 64-bit
-    $installed = Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object { $_.DisplayName -eq $programName }
+    $installed = Get-ItemProperty HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object { $_.DisplayName -eq $programName }
     if ($installed -ne $null) {
         Write-Output "$programName Failed to uninstall but did not throw an error. Please investigate."
         exit 1
