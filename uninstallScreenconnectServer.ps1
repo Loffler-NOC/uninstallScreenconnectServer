@@ -35,7 +35,7 @@ foreach ($subKey in $subKeys) {
         if ($uninstallString -ne $null) {
             Write-Output "Found UninstallString: $($uninstallString.UninstallString)"
             $msiUninstallString = $($uninstallString.UninstallString)
-            Write-Output "Found uninstall string: $msiUninstallString"
+            Write-Output "UninstallString variable set to: $msiUninstallString"
         } else {
             Write-Output "UninstallString not found in $($subKey.Name)"
             exit 1
