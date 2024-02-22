@@ -13,39 +13,60 @@ if ($installed -ne $null) {
         Write-Output "$programName is installed. Continuing to uninstallation."
     } else {
         Write-Output "$programName is not installed. Exiting script."
-        Exit 0
+        exit 0
     }
 }
 
-#Download the Screenconnect Server msi
-try {
-    if (-not (Test-Path -Path "C:\Software" -PathType Container)) {
-    New-Item -Path "C:\Software" -ItemType Directory
+#Find the screenconnect msi
+# Define the registry path to search
+$registryPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData"
+$msiUninstallString
+
+# Get all subkeys under the registry path
+$subKeys = Get-ChildItem -Path $registryPath -Recurse | Where-Object { $_.Name -match 'InstallProperties' }
+
+# Loop through each subkey
+foreach ($subKey in $subKeys) {
+    $displayName = Get-ItemProperty -Path $subKey.PSPath -Name "DisplayName" -ErrorAction SilentlyContinue
+    if ($displayName -ne $null -and $displayName.DisplayName -eq "Screenconnect") {
+        Write-Output "Found DisplayName: $($displayName.DisplayName)"
+        # Check if UninstallString key exists
+        $uninstallString = Get-ItemProperty -Path $subKey.PSPath -Name "UninstallString" -ErrorAction SilentlyContinue
+        if ($uninstallString -ne $null) {
+            Write-Output "Found UninstallString: $($uninstallString.UninstallString)"
+            $msiUninstallString = $($uninstallString.UninstallString)
+            Write-Output "Found uninstall string: $msiUninstallString"
+        } else {
+            Write-Output "UninstallString not found in $($subKey.Name)"
+            exit 1
+        }
     }
-    Invoke-WebRequest -Uri https://cwa.connectwise.com/tools/screenconnect/ControlServerInstaller2019.msi -Outfile C:\Software\ScreenConnectServerInstaller.msi
 }
-catch {
-    Write-Output "Screenconnect Server was not able to be downloaded. Please check that the device is able to reach https://cwa.connectwise.com/tools/screenconnect/ControlServerInstaller2019.msi . Full error message:"
-    Write-Output $_
+
+#Parse uninstall key from uninstall string
+# Define the regular expression pattern
+$regexPattern = "\{(.*?)\}"
+
+# Perform the regex match
+$match = [regex]::Match($msiUninstallString, $regexPattern)
+
+# Check if a match is found
+if ($match.Success) {
+    # Extract the captured group
+    $uninstallCode = $match.Groups[1].Value
+    Write-Output "Uninstall Code: $uninstallCode"
+} else {
+    Write-Output "No uninstall code found."
     exit 1
 }
 
 #Uninstall Screenconnect Server msi
 try {
-    Start-Process C:\Windows\System32\msiexec.exe -ArgumentList "/x C:\Software\ScreenConnectServerInstaller.msi /qn /norestart" -wait
+    Write-Output "Attempting to uninstall $programName"
+    Start-Process C:\Windows\System32\msiexec.exe -ArgumentList "/x{$msiUninstallString} /qn /norestart" -wait
 }
 catch {
     Write-Output "Screenconnect Server failed to uninstall with error: " $_
-    exit 1
-}
-
-#Clean up the Passly installer
-try {
-    Remove-Item -Path "C:\Software\ScreenConnectServerInstaller.msi"
-}
-catch {
-    Write-Output "Could not clean up installer. Please check C:\Software\ScreenConnectServerInstaller.msi and see if it was removed. Full error message:"
-    Write-Output $_
     exit 1
 }
 
