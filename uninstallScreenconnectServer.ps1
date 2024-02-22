@@ -63,7 +63,7 @@ if ($match.Success) {
 #Uninstall Screenconnect Server msi
 try {
     Write-Output "Attempting to uninstall $programName"
-    Start-Process C:\Windows\System32\msiexec.exe -ArgumentList "/x{$msiUninstallString} /qn /norestart" -wait
+    Start-Process C:\Windows\System32\msiexec.exe -ArgumentList "/x{$uninstallCode} /qn /norestart" -wait
 }
 catch {
     Write-Output "Screenconnect Server failed to uninstall with error: " $_
